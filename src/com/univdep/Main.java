@@ -146,7 +146,7 @@ public Main() {
         jMenuSize = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
-        setTitle("wiwiwiwiwi");
+        setTitle("Chafaint");
         setCursor(new java.awt.Cursor(java.awt.Cursor.CROSSHAIR_CURSOR));
         addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             public void mouseMoved(java.awt.event.MouseEvent evt) {
