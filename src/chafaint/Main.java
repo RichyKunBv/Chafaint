@@ -28,7 +28,7 @@ public class Main extends javax.swing.JFrame {
     private Color currentColor = Color.BLACK;
     private int currentSize = 10;
     private boolean poligonoCerrado = false; 
-    private static final String APP_VERSION = "0.3";
+    private static final String APP_VERSION = "0.3.2";
     private static final String APP_AUTHOR = "rescamilla";
     private LienzoPanel lienzo; // Nuestro panel de dibujo separado
 
@@ -101,166 +101,230 @@ public class Main extends javax.swing.JFrame {
     /**
      * Creates new form Main
      */
-    public Main() {
-        initComponents();
-        
-        Mode.setText("Modo: Asignación");
+public Main() {
+    initComponents();
+    
+    // Evitar que las toolbars se puedan arrastrar
+    jToolBar1.setFloatable(false);
+    jToolBar2.setFloatable(false);
 
-        // Inicializar etiquetas manuales (Evita NullPointerException)
-        jTxtPositionX = new javax.swing.JLabel("X: 0");
-        jTxtPositionY = new javax.swing.JLabel("Y: 0");
-        jTxtColorCode = new javax.swing.JLabel("Color");
-        jLabelVersion.setText("Versión: " + APP_VERSION);    
+    Mode.setText("Modo: Asignación");
 
-        // Agregarlas a la barra inferior manualmente
-        jToolBar2.add(new javax.swing.JToolBar.Separator());
-        jToolBar2.add(jTxtPositionX);
-        jToolBar2.add(new javax.swing.JToolBar.Separator());
-        jToolBar2.add(jTxtPositionY);
-        
-        // --- RELOJ ---
-        Timer timer = new Timer(1000, e -> {
-            LocalDateTime now = LocalDateTime.now();
-            if(jLabelDay != null) jLabelDay.setText("Día: " + now.toLocalDate());
-            if(jLabelHour != null) jLabelHour.setText("Hora: " + now.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        });
-        timer.start();
-        
-        // --- LIENZO ---
-        // Cambiar el layout del contentPane a BorderLayout
-        getContentPane().setLayout(new BorderLayout());
-        
-        // Agregar los toolbars en sus posiciones
-        getContentPane().add(jToolBar1, BorderLayout.NORTH);
-        getContentPane().add(jToolBar2, BorderLayout.SOUTH);
-        
-        // Crear el lienzo
-        lienzo = new LienzoPanel();
-        
-        // Agregar el lienzo al centro
-        getContentPane().add(lienzo, BorderLayout.CENTER);
-        
-        // Crear menú contextual
-        javax.swing.JPopupMenu menuContextual = new javax.swing.JPopupMenu();
-        javax.swing.JMenuItem menuBorrar = new javax.swing.JMenuItem("Borrar Punto");
-        javax.swing.JMenuItem menuModificar = new javax.swing.JMenuItem("Modificar Punto");
-        
-        menuBorrar.addActionListener(e -> borrarPuntoSeleccionado());
-        menuModificar.addActionListener(e -> {
-            if (puntoSeleccionado != -1) {
-                // Permitir modificar manualmente las coordenadas
-                Nodo punto = listaPuntos.get(puntoSeleccionado);
-                String xStr = JOptionPane.showInputDialog(this, "Nueva coordenada X:", punto.x);
-                String yStr = JOptionPane.showInputDialog(this, "Nueva coordenada Y:", punto.y);
-                
-                if (xStr != null && yStr != null) {
-                    try {
-                        punto.x = Integer.parseInt(xStr);
-                        punto.y = Integer.parseInt(yStr);
-                        
-                        if (Mode.getText().equals("Modo: Archivo")) {
-                            Mode.setText("Modo: Modificación");
-                        }
-                        
-                        lienzo.repaint();
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(this, "Coordenadas inválidas");
-                    }
-                }
-            }
-        });
-        
-        menuContextual.add(menuBorrar);
-        menuContextual.add(menuModificar);
-        
-        // Eventos del Mouse
-        javax.swing.event.MouseInputAdapter mouseHandler = new javax.swing.event.MouseInputAdapter() {
-            @Override
-            public void mousePressed(java.awt.event.MouseEvent evt) { 
-                // Menú contextual con click derecho
-                if (evt.isPopupTrigger()) {
-                    int puntoCerca = encontrarPuntoCercano(evt.getX(), evt.getY(), 10);
-                    if (puntoCerca != -1) {
-                        puntoSeleccionado = puntoCerca;
-                        menuContextual.show(lienzo, evt.getX(), evt.getY());
-                    }
-                    return;
-                }
-                
-                // Si hay un punto seleccionado y estamos cerca, comenzar a arrastrar
-                if (puntoSeleccionado != -1) {
-                    Nodo punto = listaPuntos.get(puntoSeleccionado);
-                    double distancia = Math.sqrt(Math.pow(evt.getX() - punto.x, 2) + Math.pow(evt.getY() - punto.y, 2));
-                    if (distancia <= 10) { // Radio de 10 píxeles
-                        puntoArrastrando = puntoSeleccionado;
-                        arrastrandoPunto = true;
-                        return;
-                    }
-                }
-                eventoPintar(evt); 
-            }
+    // Inicializar etiquetas manuales (Evita NullPointerException)
+    jTxtPositionX = new javax.swing.JLabel("X: 0");
+    jTxtPositionY = new javax.swing.JLabel("Y: 0");
+    jTxtColorCode = new javax.swing.JLabel("Color");
+    jLabelVersion.setText("Versión: " + APP_VERSION);    
+
+    // Agregarlas a la barra inferior manualmente
+    jToolBar2.add(new javax.swing.JToolBar.Separator());
+    jToolBar2.add(jTxtPositionX);
+    jToolBar2.add(new javax.swing.JToolBar.Separator());
+    jToolBar2.add(jTxtPositionY);
+    
+    // --- RELOJ ---
+    Timer timer = new Timer(1000, e -> {
+        LocalDateTime now = LocalDateTime.now();
+        if(jLabelDay != null) jLabelDay.setText("Día: " + now.toLocalDate());
+        if(jLabelHour != null) jLabelHour.setText("Hora: " + now.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+    });
+    timer.start();
+    
+    // --- LIENZO ---
+    // Cambiar el layout del contentPane a BorderLayout
+    getContentPane().setLayout(new BorderLayout());
+    
+    // Agregar los toolbars en sus posiciones
+    getContentPane().add(jToolBar1, BorderLayout.NORTH);
+    getContentPane().add(jToolBar2, BorderLayout.SOUTH);
+    
+    // Crear el lienzo
+    lienzo = new LienzoPanel();
+    
+    // Agregar el lienzo al centro
+    getContentPane().add(lienzo, BorderLayout.CENTER);
+    
+    // Crear menú contextual
+    javax.swing.JPopupMenu menuContextual = new javax.swing.JPopupMenu();
+    javax.swing.JMenuItem menuBorrar = new javax.swing.JMenuItem("Borrar Punto");
+    javax.swing.JMenuItem menuModificar = new javax.swing.JMenuItem("Modificar Punto");
+    javax.swing.JMenuItem menuCerrar = new javax.swing.JMenuItem("Cerrar Figura");
+    
+    menuBorrar.addActionListener(e -> borrarPuntoSeleccionado());
+    menuModificar.addActionListener(e -> {
+        if (puntoSeleccionado != -1) {
+            // Permitir modificar manualmente las coordenadas
+            Nodo punto = listaPuntos.get(puntoSeleccionado);
+            String xStr = JOptionPane.showInputDialog(this, "Nueva coordenada X:", punto.x);
+            String yStr = JOptionPane.showInputDialog(this, "Nueva coordenada Y:", punto.y);
             
-            @Override
-            public void mouseMoved(java.awt.event.MouseEvent evt) { 
-                actualizarCoordenadas(evt); 
-            }
-            
-            @Override
-            public void mouseDragged(java.awt.event.MouseEvent evt) {
-                // Si estamos arrastrando un punto, actualizar sus coordenadas
-                if (arrastrandoPunto && puntoArrastrando != -1) {
-                    Nodo punto = listaPuntos.get(puntoArrastrando);
-                    punto.x = evt.getX();
-                    punto.y = evt.getY();
+            if (xStr != null && yStr != null) {
+                try {
+                    punto.x = Integer.parseInt(xStr);
+                    punto.y = Integer.parseInt(yStr);
                     
-                    // Cambiar a Modificación si estaba en Archivo
                     if (Mode.getText().equals("Modo: Archivo")) {
                         Mode.setText("Modo: Modificación");
                     }
                     
                     lienzo.repaint();
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Coordenadas inválidas");
                 }
             }
-            
-            @Override
-            public void mouseReleased(java.awt.event.MouseEvent evt) {
-                if (arrastrandoPunto) {
-                    // Al soltar, el punto ya está modificado
+        }
+    });
+    
+    menuCerrar.addActionListener(e -> {
+        if (listaPuntos.size() > 2) {
+            if (!poligonoCerrado) {
+                poligonoCerrado = true; 
+                JOptionPane.showMessageDialog(Main.this, "Figura Cerrada");
+            } else {
+                JOptionPane.showMessageDialog(Main.this, "Ya está cerrada");
+            }
+            lienzo.repaint();
+        } else {
+            JOptionPane.showMessageDialog(Main.this, "Necesitas 3 puntos mínimo.");
+        }
+    });
+    
+    menuContextual.add(menuBorrar);
+    menuContextual.add(menuModificar);
+    menuContextual.add(new javax.swing.JPopupMenu.Separator());
+    menuContextual.add(menuCerrar);
+    
+    // Eventos del Mouse
+    javax.swing.event.MouseInputAdapter mouseHandler = new javax.swing.event.MouseInputAdapter() {
+        @Override
+        public void mousePressed(java.awt.event.MouseEvent evt) { 
+            // Solo manejar arrastre de puntos aquí
+            if (puntoSeleccionado != -1 && javax.swing.SwingUtilities.isLeftMouseButton(evt)) {
+                Nodo punto = listaPuntos.get(puntoSeleccionado);
+                double distancia = Math.sqrt(Math.pow(evt.getX() - punto.x, 2) + Math.pow(evt.getY() - punto.y, 2));
+                if (distancia <= 10) { // Radio de 10 píxeles
+                    puntoArrastrando = puntoSeleccionado;
+                    arrastrandoPunto = true;
+                    return;
+                }
+            }
+        }
+        
+        @Override
+        public void mouseMoved(java.awt.event.MouseEvent evt) { 
+            actualizarCoordenadas(evt); 
+        }
+        
+        @Override
+        public void mouseDragged(java.awt.event.MouseEvent evt) {
+            // Si estamos arrastrando un punto, actualizar sus coordenadas
+            if (arrastrandoPunto && puntoArrastrando != -1) {
+                Nodo punto = listaPuntos.get(puntoArrastrando);
+                punto.x = evt.getX();
+                punto.y = evt.getY();
+                
+                // Cambiar a Modificación si estaba en Archivo
+                if (Mode.getText().equals("Modo: Archivo")) {
                     Mode.setText("Modo: Modificación");
-                    arrastrandoPunto = false;
-                    puntoArrastrando = -1;
                 }
+                
+                lienzo.repaint();
+            }
+        }
+        
+        @Override
+        public void mouseReleased(java.awt.event.MouseEvent evt) {
+            if (arrastrandoPunto) {
+                // Al soltar, el punto ya está modificado
+                Mode.setText("Modo: Modificación");
+                arrastrandoPunto = false;
+                puntoArrastrando = -1;
             }
             
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                // Doble-click para seleccionar punto
-                if (evt.getClickCount() == 2) {
-                    seleccionarPunto(evt.getX(), evt.getY());
+            // Menú contextual solo con click derecho
+            if (evt.isPopupTrigger() && javax.swing.SwingUtilities.isRightMouseButton(evt)) {
+                // Verificar si el click fue sobre un punto existente
+                int puntoCerca = encontrarPuntoCercano(evt.getX(), evt.getY(), 10);
+                
+                if (puntoCerca != -1) {
+                    // Click sobre un punto: mostrar menú contextual
+                    puntoSeleccionado = puntoCerca;
+                    lienzo.repaint();
+                    menuContextual.show(lienzo, evt.getX(), evt.getY());
+                } else {
+                    // Click en espacio vacío: comportamiento normal (cerrar figura)
+                    // No hacemos nada aquí, se maneja en mouseClicked
                 }
             }
-        };
+        }
         
-        lienzo.addMouseListener(mouseHandler);
-        lienzo.addMouseMotionListener(mouseHandler);
-        
-        // Configurar el lienzo para que pueda recibir eventos de teclado
-        lienzo.setFocusable(true);
-        lienzo.requestFocusInWindow();
-        
-        lienzo.addKeyListener(new java.awt.event.KeyAdapter() {
-            @Override
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_DELETE) {
-                    borrarPuntoSeleccionado();
+        @Override
+        public void mouseClicked(java.awt.event.MouseEvent evt) {
+            // Click izquierdo: agregar punto
+            if (javax.swing.SwingUtilities.isLeftMouseButton(evt)) {
+                listaPuntos.add(new Nodo(evt.getX(), evt.getY(), currentColor, currentSize));
+                jLabelElements.setText("Elem: " + listaPuntos.size());
+                
+                // Si ya estaba cerrado, ahora está MODIFICADO y ya no cerrado
+                if (poligonoCerrado) {
+                    poligonoCerrado = false;
+                    Mode.setText("Modo: Modificación");
                 }
+                // Cambiar a Modificación si estaba en Archivo
+                else if (Mode.getText().equals("Modo: Archivo")) {
+                    Mode.setText("Modo: Modificación");
+                }
+                
+                lienzo.repaint();
             }
-        });
-        
-        // Configurar tamaño
-        setSize(800, 600);
-        setLocationRelativeTo(null);
-    }
+            // Click derecho: cerrar figura (solo si NO fue sobre un punto)
+            else if (javax.swing.SwingUtilities.isRightMouseButton(evt)) {
+                // Verificar que NO fue sobre un punto (ya que eso muestra menú contextual)
+                int puntoCerca = encontrarPuntoCercano(evt.getX(), evt.getY(), 10);
+                
+                if (puntoCerca == -1) { // Solo cerrar si fue en espacio vacío
+                    if (listaPuntos.size() > 2) {
+                        if (!poligonoCerrado) {
+                            poligonoCerrado = true; 
+                            JOptionPane.showMessageDialog(Main.this, "Figura Cerrada");
+                        } else {
+                            JOptionPane.showMessageDialog(Main.this, "Ya está cerrada");
+                        }
+                        lienzo.repaint();
+                    } else {
+                        JOptionPane.showMessageDialog(Main.this, "Necesitas 3 puntos mínimo.");
+                    }
+                }
+                // Si fue sobre un punto, ya se manejó en mouseReleased (menú contextual)
+            }
+            
+            // Doble-click: seleccionar punto
+            if (evt.getClickCount() == 2 && javax.swing.SwingUtilities.isLeftMouseButton(evt)) {
+                seleccionarPunto(evt.getX(), evt.getY());
+            }
+        }
+    };
+    
+    lienzo.addMouseListener(mouseHandler);
+    lienzo.addMouseMotionListener(mouseHandler);
+    
+    // Configurar el lienzo para que pueda recibir eventos de teclado
+    lienzo.setFocusable(true);
+    lienzo.requestFocusInWindow();
+    
+    lienzo.addKeyListener(new java.awt.event.KeyAdapter() {
+        @Override
+        public void keyPressed(java.awt.event.KeyEvent evt) {
+            if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_DELETE) {
+                borrarPuntoSeleccionado();
+            }
+        }
+    });
+    
+    // Configurar tamaño
+    setSize(800, 600);
+    setLocationRelativeTo(null);
+}
 
     // --- MÉTODOS DE LÓGICA (EL CEREBRO) ---
 
@@ -386,7 +450,7 @@ public class Main extends javax.swing.JFrame {
 
     private void mostrarAyuda() {
         JOptionPane.showMessageDialog(this, 
-            "Proyecto Chafaint" + APP_VERSION + "\n" +
+            "Proyecto Chafaint " + APP_VERSION + "\n" +
             "- Click Izquierdo: Poner punto\n" +
             "- Click Derecho: Cerrar figura\n" +
             "- Doble-click: Seleccionar punto\n" +
@@ -408,7 +472,7 @@ public class Main extends javax.swing.JFrame {
     
     private void AcercaDE() {                                        
         JOptionPane.showMessageDialog(this, 
-            "Proyecto Chafaint\n" +
+            "Proyecto Chafaint\n " +
             "Versión: " + APP_VERSION + "\n" +
             "Desarrollado por: " + APP_AUTHOR + "\n");
     }
@@ -479,6 +543,17 @@ public class Main extends javax.swing.JFrame {
         }
     }
 
+    // Historial de Versiones asi bien macabron :V
+    private void HV() {
+        JOptionPane.showMessageDialog(this, 
+            "Proyecto Chafaint " + APP_VERSION + "\n" +
+            "0.1: Creacion del proyecto,  solo se podia dibujar\n" +
+            "0.2: Pruebas de diferentes formas de hacer lineas\n" +
+            "0.3: Se pueden hacer figuras a travez de poner puntos\n" +
+            "0.3.1: Se corrigio un error pndejo :V\n" +
+            "0.3.2: Ahora las ToolBar ya no se salen si se arrastran (y se agregaron mas errores pa no quedarme sin chamba)\n"
+);
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -525,11 +600,15 @@ public class Main extends javax.swing.JFrame {
         jMenu3 = new javax.swing.JMenu();
         jMenuHelp = new javax.swing.JMenuItem();
         jMenuAD = new javax.swing.JMenuItem();
+        jMenuHV = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Chafaint Premium Delux Super Papu Pro Edition");
         setCursor(new java.awt.Cursor(java.awt.Cursor.CROSSHAIR_CURSOR));
+        setPreferredSize(new java.awt.Dimension(600, 400));
 
+        jToolBar1.setBackground(new java.awt.Color(255, 204, 204));
+        jToolBar1.setForeground(new java.awt.Color(255, 204, 204));
         jToolBar1.setRollover(true);
 
         jButtonOpen.setText("Abrir");
@@ -579,6 +658,8 @@ public class Main extends javax.swing.JFrame {
         jButtonHelp.addActionListener(this::jButtonHelpActionPerformed);
         jToolBar1.add(jButtonHelp);
 
+        jToolBar2.setBackground(new java.awt.Color(255, 204, 204));
+        jToolBar2.setForeground(new java.awt.Color(255, 204, 204));
         jToolBar2.setRollover(true);
 
         jLabelElements.setText("Elementos: ");
@@ -656,6 +737,10 @@ public class Main extends javax.swing.JFrame {
         jMenuAD.addActionListener(this::jMenuADActionPerformed);
         jMenu3.add(jMenuAD);
 
+        jMenuHV.setText("Historial de Versiones");
+        jMenuHV.addActionListener(this::jMenuHVActionPerformed);
+        jMenu3.add(jMenuHV);
+
         jMenuBar1.add(jMenu3);
 
         setJMenuBar(jMenuBar1);
@@ -664,14 +749,14 @@ public class Main extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jToolBar1, javax.swing.GroupLayout.DEFAULT_SIZE, 585, Short.MAX_VALUE)
+            .addComponent(jToolBar1, javax.swing.GroupLayout.DEFAULT_SIZE, 583, Short.MAX_VALUE)
             .addComponent(jToolBar2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 442, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 353, Short.MAX_VALUE)
                 .addComponent(jToolBar2, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
@@ -738,6 +823,10 @@ public class Main extends javax.swing.JFrame {
         mostrarAyuda();
     }//GEN-LAST:event_jButtonHelpActionPerformed
 
+    private void jMenuHVActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuHVActionPerformed
+        HV();
+    }//GEN-LAST:event_jMenuHVActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -777,6 +866,7 @@ public static void main(String args[]) {
     private javax.swing.JMenuItem jMenuClear;
     private javax.swing.JMenuItem jMenuColor;
     private javax.swing.JMenuItem jMenuExit;
+    private javax.swing.JMenuItem jMenuHV;
     private javax.swing.JMenuItem jMenuHelp;
     private javax.swing.JMenuItem jMenuOpen;
     private javax.swing.JMenuItem jMenuSave;
