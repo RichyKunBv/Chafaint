@@ -28,7 +28,7 @@ public class Main extends javax.swing.JFrame {
     private Color currentColor = Color.BLACK;
     private int currentSize = 10;
     private boolean poligonoCerrado = false; 
-    private static final String APP_VERSION = "0.3.2";
+    private static final String APP_VERSION = "0.3.3";
     private static final String APP_AUTHOR = "rescamilla";
     private LienzoPanel lienzo; // Nuestro panel de dibujo separado
 
@@ -197,18 +197,17 @@ public Main() {
     // Eventos del Mouse
     javax.swing.event.MouseInputAdapter mouseHandler = new javax.swing.event.MouseInputAdapter() {
         @Override
-        public void mousePressed(java.awt.event.MouseEvent evt) { 
-            // Solo manejar arrastre de puntos aquí
-            if (puntoSeleccionado != -1 && javax.swing.SwingUtilities.isLeftMouseButton(evt)) {
-                Nodo punto = listaPuntos.get(puntoSeleccionado);
-                double distancia = Math.sqrt(Math.pow(evt.getX() - punto.x, 2) + Math.pow(evt.getY() - punto.y, 2));
-                if (distancia <= 10) { // Radio de 10 píxeles
-                    puntoArrastrando = puntoSeleccionado;
-                    arrastrandoPunto = true;
-                    return;
-                }
-            }
+public void mousePressed(java.awt.event.MouseEvent evt) { 
+    // Solo manejar arrastre de puntos AQUÍ
+    if (puntoSeleccionado != -1 && javax.swing.SwingUtilities.isLeftMouseButton(evt)) {
+        Nodo punto = listaPuntos.get(puntoSeleccionado);
+        double distancia = Math.sqrt(Math.pow(evt.getX() - punto.x, 2) + Math.pow(evt.getY() - punto.y, 2));
+        if (distancia <= 10) { // Radio de 10 píxeles
+            puntoArrastrando = puntoSeleccionado;
+            arrastrandoPunto = true;
         }
+    }
+}
         
         @Override
         public void mouseMoved(java.awt.event.MouseEvent evt) { 
@@ -321,10 +320,21 @@ public Main() {
         }
     });
     
+
+addWindowListener(new java.awt.event.WindowAdapter() {
+    @Override
+    public void windowClosing(java.awt.event.WindowEvent e) {
+        SALIR();
+    }
+});
+    
     // Configurar tamaño
     setSize(800, 600);
     setLocationRelativeTo(null);
 }
+
+
+
 
     // --- MÉTODOS DE LÓGICA (EL CEREBRO) ---
 
@@ -333,59 +343,31 @@ public Main() {
         if(jTxtPositionY != null) jTxtPositionY.setText("Y: " + evt.getY());
     }
 
-    private void eventoPintar(java.awt.event.MouseEvent evt) {
-        if (javax.swing.SwingUtilities.isLeftMouseButton(evt)) {
-            // Agregar punto
-            listaPuntos.add(new Nodo(evt.getX(), evt.getY(), currentColor, currentSize));
-            jLabelElements.setText("Elem: " + listaPuntos.size());
-            
-            // Si ya estaba cerrado, ahora está MODIFICADO y ya no cerrado
-            if (poligonoCerrado) {
-                poligonoCerrado = false;
-                Mode.setText("Modo: Modificación");
-            }
-            // Cambiar a Modificación si estaba en Archivo
-            else if (Mode.getText().equals("Modo: Archivo")) {
-                Mode.setText("Modo: Modificación");
-            }
-            // Si estaba en Asignación, se queda en Asignación
-            
-            lienzo.repaint();
-            
-        } else if (javax.swing.SwingUtilities.isRightMouseButton(evt)) {
-            // Click derecho para CERRAR
-            if (listaPuntos.size() > 2) {
-                if (!poligonoCerrado) {
-                    poligonoCerrado = true; 
-                    // No cambia el modo, solo el estado del polígono
-                    JOptionPane.showMessageDialog(this, "Figura Cerrada");
-                } else {
-                    JOptionPane.showMessageDialog(this, "Ya está cerrada");
-                }
-                lienzo.repaint();
-            } else {
-                JOptionPane.showMessageDialog(this, "Necesitas 3 puntos mínimo.");
-            }
-        }
-    }
 
-    private void guardarArchivo() {
-        JFileChooser fc = new JFileChooser();
-        // Filtro para que solo muestre .pts
-        fc.setFileFilter(new FileNameExtensionFilter("Archivos de Puntos (.pts)", "pts"));
-        
-        if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File f = fc.getSelectedFile();
-            if (!f.getName().toLowerCase().endsWith(".pts")) f = new File(f.getParentFile(), f.getName() + ".pts");
-            
-            try (PrintWriter pw = new PrintWriter(f)) {
-                pw.println("CHAFAINT_V1");
-                for (Nodo n : listaPuntos) pw.println(n.x+";"+n.y+";"+n.color.getRed()+","+n.color.getGreen()+","+n.color.getBlue()+";"+n.grosor);
-                JOptionPane.showMessageDialog(this, "Guardado exitoso");
-                Mode.setText("Modo: Archivo");  // SOLO ESTA LÍNEA
-            } catch (Exception e) { JOptionPane.showMessageDialog(this, "Error: " + e.getMessage()); }
+private boolean guardarArchivo() {
+    JFileChooser fc = new JFileChooser();
+    fc.setFileFilter(new FileNameExtensionFilter("Archivos de Puntos (.pts)", "pts"));
+    
+    if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        File f = fc.getSelectedFile();
+        if (!f.getName().toLowerCase().endsWith(".pts")) {
+            f = new File(f.getParentFile(), f.getName() + ".pts");
+        }
+        try (PrintWriter pw = new PrintWriter(f)) {
+            pw.println("CHAFAINT_V1");
+            for (Nodo n : listaPuntos) {
+                pw.println(n.x + ";" + n.y + ";" + n.color.getRed() + "," + n.color.getGreen() + "," + n.color.getBlue() + ";" + n.grosor);
+            }
+            JOptionPane.showMessageDialog(this, "Guardado exitoso");
+            Mode.setText("Modo: Archivo");
+            return true;
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar: " + e.getMessage());
+            return false;
         }
     }
+    return false; // Usuario canceló
+}
 
     private void abrirArchivo() {
         JFileChooser fc = new JFileChooser();
@@ -433,20 +415,26 @@ public Main() {
         String s = JOptionPane.showInputDialog("Grosor (1-50):", currentSize);
         if(s!=null) try { currentSize = Integer.parseInt(s); } catch(Exception e){}
     }
-    
+
     private void mostrarValores() {
-        StringBuilder sb = new StringBuilder("Puntos:\n");
-        for(int i=0; i<listaPuntos.size(); i++) {
-            Nodo n = listaPuntos.get(i);
-            sb.append(i+1).append(". X=").append(n.x).append(" Y=").append(n.y)
-              .append(" Color=RGB(").append(n.color.getRed()).append(",")
-              .append(n.color.getGreen()).append(",").append(n.color.getBlue())
-              .append(") Grosor=").append(n.grosor).append("\n");
-        }
-        javax.swing.JScrollPane scroll = new javax.swing.JScrollPane(new javax.swing.JTextArea(sb.toString()));
-        scroll.setPreferredSize(new java.awt.Dimension(300,400));
-        JOptionPane.showMessageDialog(this, scroll);
+    StringBuilder sb = new StringBuilder("Puntos:\n");
+    for (int i = 0; i < listaPuntos.size(); i++) {
+        Nodo n = listaPuntos.get(i);
+        sb.append(i + 1).append(". X=").append(n.x).append(" Y=").append(n.y)
+          .append(" Color=RGB(").append(n.color.getRed()).append(",")
+          .append(n.color.getGreen()).append(",").append(n.color.getBlue())
+          .append(") Grosor=").append(n.grosor).append("\n");
     }
+    javax.swing.JTextArea textArea = new javax.swing.JTextArea(sb.toString());
+    textArea.setEditable(false);          // No editable
+    textArea.setBackground(javax.swing.UIManager.getColor("Panel.background"));
+    textArea.setCaretPosition(0);
+    textArea.setSelectionStart(0);
+    textArea.setSelectionEnd(0);
+    javax.swing.JScrollPane scroll = new javax.swing.JScrollPane(textArea);
+    scroll.setPreferredSize(new java.awt.Dimension(400, 300));
+    JOptionPane.showMessageDialog(this, scroll, "Lista de Puntos", JOptionPane.PLAIN_MESSAGE);
+}
 
     private void mostrarAyuda() {
         JOptionPane.showMessageDialog(this, 
@@ -460,15 +448,50 @@ public Main() {
             "- Usa los menús para Guardar/Abrir");
     }
     
-    private void SALIR() {
-        int option = JOptionPane.showConfirmDialog(this,
-                            "¿Desea salir de la aplicación?", "Salir",
-                            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-        if(option == JOptionPane.YES_OPTION) {
-            this.dispose();
-            System.exit(0);
+
+private void SALIR() {
+    // --- PRIMER MENÚ: GUARDAR OPCIONAL (solo si hay puntos) ---
+    if (!listaPuntos.isEmpty()) {
+        int opcionGuardar = JOptionPane.showConfirmDialog(this,
+            "¿Desea guardar los cambios antes de salir?",
+            "Guardar cambios",
+            JOptionPane.YES_NO_CANCEL_OPTION,
+            JOptionPane.QUESTION_MESSAGE);
+        
+        if (opcionGuardar == JOptionPane.CANCEL_OPTION) {
+            return; // Usuario canceló todo el proceso de salida
         }
+        
+        if (opcionGuardar == JOptionPane.YES_OPTION) {
+            boolean guardadoExitoso = guardarArchivo();
+            if (!guardadoExitoso) {
+                // Si no se guardó (error o canceló), preguntamos si quiere salir sin guardar
+                int salirSinGuardar = JOptionPane.showConfirmDialog(this,
+                    "No se pudo guardar el archivo.\n¿Salir de todas formas?",
+                    "Error al guardar",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+                if (salirSinGuardar != JOptionPane.YES_OPTION) {
+                    return; // No sale, permanece en la app
+                }
+            }
+        }
+        // Si eligió NO, continúa al segundo menú
     }
+
+    // --- SEGUNDO MENÚ: CONFIRMAR SALIDA (siempre aparece) ---
+    int confirmarSalida = JOptionPane.showConfirmDialog(this,
+        "¿Está seguro que desea salir de la aplicación?",
+        "Salir",
+        JOptionPane.YES_NO_OPTION,
+        JOptionPane.QUESTION_MESSAGE);
+    
+    if (confirmarSalida == JOptionPane.YES_OPTION) {
+        this.dispose();
+        System.exit(0);
+    }
+    // Si elige NO, simplemente no hace nada y continúa en la aplicación
+}
     
     private void AcercaDE() {                                        
         JOptionPane.showMessageDialog(this, 
@@ -551,7 +574,8 @@ public Main() {
             "0.2: Pruebas de diferentes formas de hacer lineas\n" +
             "0.3: Se pueden hacer figuras a travez de poner puntos\n" +
             "0.3.1: Se corrigio un error pndejo :V\n" +
-            "0.3.2: Ahora las ToolBar ya no se salen si se arrastran (y se agregaron mas errores pa no quedarme sin chamba)\n"
+            "0.3.2: Ahora las ToolBar ya no se salen si se arrastran (y se agregaron mas errores pa no quedarme sin chamba)\n" +
+            "0.3.3: Ya no se puede escribir en la tabla de valores y ahora hay un menu de confirmacion al cerrar la aplicacion por si se quiere guardar el trabajo hecho"
 );
     }
 
@@ -886,4 +910,6 @@ public static void main(String args[]) {
     private javax.swing.JToolBar jToolBar2;
     // End of variables declaration//GEN-END:variables
 
+    
+    
 }
