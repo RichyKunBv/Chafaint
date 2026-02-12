@@ -126,6 +126,8 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuADActionPerformed"/>
               </Events>
             </MenuItem>
+            <MenuItem class="javax.swing.JPopupMenu$Separator" name="jSeparator11">
+            </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuHV">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Historial de Versiones"/>
@@ -199,7 +201,10 @@
       <SubComponents>
         <Component class="javax.swing.JButton" name="jButtonOpen">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Abrir"/>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/chafaint/document-open.png"/>
+            </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Abrir"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="verticalTextPosition" type="int" value="3"/>
@@ -212,7 +217,10 @@
         </Component>
         <Component class="javax.swing.JButton" name="jButtonSave">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Guardar"/>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/chafaint/document-save.png"/>
+            </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Guardar"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="verticalTextPosition" type="int" value="3"/>
@@ -225,7 +233,10 @@
         </Component>
         <Component class="javax.swing.JButton" name="jButtonColor">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Color"/>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/chafaint/cute-pencil-cartoon-by-Vexels (1).png"/>
+            </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Color"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="verticalTextPosition" type="int" value="3"/>
@@ -238,7 +249,10 @@
         </Component>
         <Component class="javax.swing.JButton" name="jButtonValor">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Valores"/>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/chafaint/archive.png"/>
+            </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Valores"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="verticalTextPosition" type="int" value="3"/>

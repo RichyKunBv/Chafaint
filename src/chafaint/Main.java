@@ -31,8 +31,10 @@ public class Main extends javax.swing.JFrame {
     private Color currentColor = Color.BLACK;
     private int currentSize = 10;
     private boolean poligonoCerrado = false; 
-    private static final String APP_VERSION = "0.3.4";
-    private static final String APP_AUTHOR = "rescamilla";
+    private static final String APP_VERSION = "0.4.0";
+    private static final String APP_AUTHOR = "rescamilla"; 
+    private static final String GIT_AUTHOR = "https://github.com/RichyKunBv";
+    private static final String APP_GIT = "https://github.com/RichyKunBv/Chafaint";
     private LienzoPanel lienzo;
     private javax.swing.JPopupMenu menuContextual;
 
@@ -109,7 +111,34 @@ public class Main extends javax.swing.JFrame {
      */
 public Main() {
     initComponents();
+
+    setTitle("Chafaint Premium Delux Super Papu Pro Edition");
     
+try {
+    java.net.URL urlIcono = getClass().getResource("/chafaint/teto.png");
+    if (urlIcono == null) {
+        urlIcono = getClass().getResource("teto.png");
+    }
+    
+    if (urlIcono != null) {
+        java.awt.Image icono = new javax.swing.ImageIcon(urlIcono).getImage();
+        
+        setIconImage(icono);
+        
+        if (java.awt.Taskbar.isTaskbarSupported()) {
+            java.awt.Taskbar taskbar = java.awt.Taskbar.getTaskbar();
+            if (taskbar.isSupported(java.awt.Taskbar.Feature.ICON_IMAGE)) {
+                taskbar.setIconImage(icono);
+            }
+        }
+    } else {
+        System.err.println("¡No se encontró teto.png!");
+    }
+} catch (Exception e) {
+    e.printStackTrace();
+}
+    
+
     // Evitar que las toolbars se puedan arrastrar
     jToolBar1.setFloatable(false);
     jToolBar2.setFloatable(false);
@@ -409,7 +438,7 @@ private Boolean guardarArchivo() {
                 while ((line = br.readLine()) != null) {
     try {
         String[] p = line.split(";");
-        if (p.length != 4) continue; // línea mal formada, saltar
+        if (p.length != 4) continue;
         
         int x = Integer.parseInt(p[0]);
         int y = Integer.parseInt(p[1]);
@@ -430,7 +459,6 @@ private Boolean guardarArchivo() {
         
         listaPuntos.add(new Nodo(x, y, new Color(r, g, b), grosor));
     } catch (NumberFormatException e) {
-        // ignorar línea corrupta
     }
 }
                 poligonoCerrado = false; 
@@ -515,7 +543,7 @@ private void SALIR() {
             JOptionPane.QUESTION_MESSAGE);
 
         if (opcionGuardar == JOptionPane.CANCEL_OPTION) {
-            return; // Usuario canceló todo el proceso de salida
+            return;
         }
 
         if (opcionGuardar == JOptionPane.YES_OPTION) {
@@ -561,7 +589,9 @@ private void SALIR() {
         JOptionPane.showMessageDialog(this, 
             "Proyecto Chafaint\n" +
             "Versión: " + APP_VERSION + "\n" +
-            "Desarrollado por: " + APP_AUTHOR + "\n");
+            "Desarrollado por: " + APP_AUTHOR + "\n" +
+            "Git del desarrollador: " + GIT_AUTHOR +"\n" +
+            "Git del proyecto " + APP_GIT + "\n");
     }
     
     // Método para encontrar el punto más cercano a las coordenadas
@@ -638,13 +668,16 @@ private void SALIR() {
     private void HV() {
         JOptionPane.showMessageDialog(this, 
             "Proyecto Chafaint " + APP_VERSION + "\n" +
+            "Git del proyecto " + APP_GIT + "\n" +
             "0.1: Creacion del proyecto,  solo se podia dibujar\n" +
             "0.2: Pruebas de diferentes formas de hacer lineas\n" +
             "0.3: Se pueden hacer figuras a travez de poner puntos\n" +
-            "0.3.1: Se corrigio un error pndejo :V\n" +
+            "0.3.1: Se corrigio un error\n" +
             "0.3.2: Ahora las ToolBar ya no se salen si se arrastran (y se agregaron mas errores pa no quedarme sin chamba)\n" +
-            "0.3.3: Ya no se puede escribir en la tabla de valores y ahora hay un menu de confirmacion al cerrar la aplicacion por si se quiere guardar el trabajo hecho\n" +
-            "0.3.4: Se mejoro la fiabilidad de todo este pedo (tiene bugs sin arreglar pa no perder mi chamba)"
+            "0.3.3: Ya no se puede escribir en la tabla de valores y ahora hay un menu de confirmacion al cerrar la "
+                    + "aplicacion por si se quiere guardar el trabajo hecho\n" +
+            "0.3.4: Se mejoro la fiabilidad de todo este pedo (tiene bugs sin arreglar pa no perder mi chamba)\n" +
+            "0.4.0: La aplicacion tiene icono y un menu para ver el historial de versiones"
 );
     }
 
@@ -693,6 +726,7 @@ private void SALIR() {
         jMenu3 = new javax.swing.JMenu();
         jMenuHelp = new javax.swing.JMenuItem();
         jMenuAD = new javax.swing.JMenuItem();
+        jSeparator11 = new javax.swing.JPopupMenu.Separator();
         jMenuHV = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -704,7 +738,8 @@ private void SALIR() {
         jToolBar1.setForeground(new java.awt.Color(255, 204, 204));
         jToolBar1.setRollover(true);
 
-        jButtonOpen.setText("Abrir");
+        jButtonOpen.setIcon(new javax.swing.ImageIcon(getClass().getResource("/chafaint/document-open.png"))); // NOI18N
+        jButtonOpen.setToolTipText("Abrir");
         jButtonOpen.setFocusable(false);
         jButtonOpen.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButtonOpen.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -712,7 +747,8 @@ private void SALIR() {
         jToolBar1.add(jButtonOpen);
         jToolBar1.add(jSeparator3);
 
-        jButtonSave.setText("Guardar");
+        jButtonSave.setIcon(new javax.swing.ImageIcon(getClass().getResource("/chafaint/document-save.png"))); // NOI18N
+        jButtonSave.setToolTipText("Guardar");
         jButtonSave.setFocusable(false);
         jButtonSave.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButtonSave.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -720,7 +756,8 @@ private void SALIR() {
         jToolBar1.add(jButtonSave);
         jToolBar1.add(jSeparator4);
 
-        jButtonColor.setText("Color");
+        jButtonColor.setIcon(new javax.swing.ImageIcon(getClass().getResource("/chafaint/cute-pencil-cartoon-by-Vexels (1).png"))); // NOI18N
+        jButtonColor.setToolTipText("Color");
         jButtonColor.setFocusable(false);
         jButtonColor.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButtonColor.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -728,7 +765,8 @@ private void SALIR() {
         jToolBar1.add(jButtonColor);
         jToolBar1.add(jSeparator5);
 
-        jButtonValor.setText("Valores");
+        jButtonValor.setIcon(new javax.swing.ImageIcon(getClass().getResource("/chafaint/archive.png"))); // NOI18N
+        jButtonValor.setToolTipText("Valores");
         jButtonValor.setFocusable(false);
         jButtonValor.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButtonValor.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -829,6 +867,7 @@ private void SALIR() {
         jMenuAD.setText("Acerca De");
         jMenuAD.addActionListener(this::jMenuADActionPerformed);
         jMenu3.add(jMenuAD);
+        jMenu3.add(jSeparator11);
 
         jMenuHV.setText("Historial de Versiones");
         jMenuHV.addActionListener(this::jMenuHVActionPerformed);
@@ -967,6 +1006,7 @@ public static void main(String args[]) {
     private javax.swing.JMenuItem jMenuValor;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JToolBar.Separator jSeparator10;
+    private javax.swing.JPopupMenu.Separator jSeparator11;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JToolBar.Separator jSeparator3;
     private javax.swing.JToolBar.Separator jSeparator4;
